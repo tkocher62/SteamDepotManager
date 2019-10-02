@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FluentFTP;
+using System;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -9,15 +10,15 @@ namespace SteamDepotInstaller2
 	{
 		private static string gamesFilePath;
 		private const string contentFilePath = "Server/data/Content/3";
-		private static WebClient client = new WebClient();
+		private static FtpClient ftp = new FtpClient("108.36.249.161");
 		private static int lastCount = 0;
 		private static float fCount = 0;
 
 		private static void UploadFile(string src, string dest)
 		{
-			if (client.Credentials != null)
+			if (ftp.Credentials != null)
 			{
-				client.UploadFile($"ftp://108.36.249.161/{dest}", src);
+				ftp.UploadFile(src, dest);
 			}
 		}
 
@@ -60,20 +61,7 @@ namespace SteamDepotInstaller2
 
 		private static void MoveFolder(string sourceFolder, string destFolder, string dirName, int totalCount)
 		{
-			if (!Directory.Exists(destFolder))
-			{
-				WebRequest request = WebRequest.Create($"ftp://108.36.249.161/{destFolder}");
-				request.Method = WebRequestMethods.Ftp.MakeDirectory;
-				request.Credentials = new NetworkCredential("todd", "gmodsniper");
-				try
-				{
-					FtpWebResponse a = (FtpWebResponse)request.GetResponse();
-				}
-				catch (Exception x)
-				{
-					// Directory already exists, so we do nothing
-				};
-			}
+			if (!Directory.Exists(destFolder)) ftp.CreateDirectory(destFolder);
 			DirectoryInfo d = new DirectoryInfo(sourceFolder);
 			FileInfo[] files = d.GetFiles();
 			foreach (FileInfo file in files)
@@ -115,7 +103,7 @@ namespace SteamDepotInstaller2
 			}
 			gamesFilePath = folder;
 
-			client.Credentials = new NetworkCredential("todd", "gmodsniper");
+			ftp.Credentials = new NetworkCredential("todd", "gmodsniper");
 
 			Console.WriteLine("Initializing file transfer...");
 			Console.WriteLine("-----------------------------");

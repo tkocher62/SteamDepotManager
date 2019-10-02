@@ -22,7 +22,7 @@ namespace SteamDepotInstaller2
 	public static class Get
 	{
 		private static readonly string dPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-		private static readonly string sPath = (string)Registry.GetValue(InternalCheckIs64bit() ?
+		private static readonly string sPath = (string)Registry.GetValue(Environment.Is64BitOperatingSystem ?
 			@"HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Valve\Steam" :
 			@"HKEY_LOCAL_MACHINE\SOFTWARE\Valve\Steam", "InstallPath", null);
 		private static int lastCount = 0;
@@ -34,27 +34,6 @@ namespace SteamDepotInstaller2
 			[In] IntPtr hProcess,
 			[Out] out bool wow64Process
 		);
-
-		private static bool InternalCheckIs64bit()
-		{
-			if ((Environment.OSVersion.Version.Major == 5 && Environment.OSVersion.Version.Minor >= 1) ||
-				Environment.OSVersion.Version.Major >= 6)
-			{
-				using (Process p = Process.GetCurrentProcess())
-				{
-					bool retVal;
-					if (!IsWow64Process(p.Handle, out retVal))
-					{
-						return false;
-					}
-					return retVal;
-				}
-			}
-			else
-			{
-				return false;
-			}
-		}
 
 		private static bool InitCopy(string sourceFolder, string destFolder)
 		{
@@ -135,7 +114,6 @@ namespace SteamDepotInstaller2
 
 		public static void GetGameFiles()
 		{
-			Console.Clear();
 			Console.WriteLine("Enter the steam game id, or the game title exactly as shown in steam wrapped in quotes.\nThe game must be installed on this computer.");
 			string gameTitle = Console.ReadLine();
 			GameInfo gInfo = new GameInfo();
@@ -264,7 +242,8 @@ namespace SteamDepotInstaller2
 			}
 
 			Console.WriteLine("File transfer completed. The files have been placed on your desktop.");
-			Console.WriteLine("Press enter to exit...");
+			Console.WriteLine();
+			GetGameFiles();
 			Console.ReadLine();
 		}
 	}
