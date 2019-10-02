@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.271
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamDepotInstaller2", "SteamDepotInstaller2\SteamDepotInstaller2.csproj", "{906EE3FC-0858-4FAF-9C0E-74E1CF9B603C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{906EE3FC-0858-4FAF-9C0E-74E1CF9B603C}.Debug|Any CPU.ActiveCfg = Release|Any CPU
+		{906EE3FC-0858-4FAF-9C0E-74E1CF9B603C}.Debug|Any CPU.Build.0 = Release|Any CPU
+		{906EE3FC-0858-4FAF-9C0E-74E1CF9B603C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{906EE3FC-0858-4FAF-9C0E-74E1CF9B603C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {32C1C64A-2CB6-4976-AEBC-4F4346D153DA}
+	EndGlobalSection
+EndGlobal
