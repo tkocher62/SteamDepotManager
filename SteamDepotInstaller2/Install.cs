@@ -45,7 +45,7 @@ namespace SteamDepotInstaller2
 					File.Delete(file.FullName);
 				}
 				currInc += inc;
-				Console.WriteLine($"Transferring {name} ({file.Name})... [{(int)currInc}%]");
+				Console.WriteLine($"-> Transferring {name} ({file.Name})... [{(int)currInc}%]");
 			}
 			Console.WriteLine($"Finished transferring {name}!");
 		}
@@ -61,7 +61,8 @@ namespace SteamDepotInstaller2
 
 		private static void MoveFolder(string sourceFolder, string destFolder, string dirName, int totalCount)
 		{
-			if (!Directory.Exists(destFolder)) ftp.CreateDirectory(destFolder);
+			if (ftp.DirectoryExists(destFolder)) ftp.DeleteDirectory(destFolder);
+			ftp.CreateDirectory(destFolder);
 			DirectoryInfo d = new DirectoryInfo(sourceFolder);
 			FileInfo[] files = d.GetFiles();
 			foreach (FileInfo file in files)
@@ -79,7 +80,7 @@ namespace SteamDepotInstaller2
 				int progress = (int)(fCount / totalCount * 100);
 				if (lastCount != progress && progress > lastCount)
 				{
-					Console.WriteLine($"-> Transferring sub files ({dirName})... [{progress}%]");
+					Console.WriteLine($"-> Transferring sub files ({dirName})... [{progress}%] [{fCount}/{totalCount}]");
 				}
 				lastCount = progress;
 			}
@@ -105,6 +106,7 @@ namespace SteamDepotInstaller2
 
 			ftp.Credentials = new NetworkCredential("todd", "gmodsniper");
 
+			DateTime time = DateTime.Now;
 			Console.WriteLine("Initializing file transfer...");
 			Console.WriteLine("-----------------------------");
 
@@ -147,9 +149,11 @@ namespace SteamDepotInstaller2
 				fCount = 0;
 				lastCount = 0;
 				string destDir = $"{gamesFilePath}/steamapps/common/{dir}";
-				MoveFolder(destDir, $"{contentFilePath}/common/{dir}", dir, Utils.CountFiles(destDir));
+				int totalfiles = Utils.CountFiles(destDir);
+				Console.WriteLine($"Initializing transfer of {totalfiles} files for {dir}...");
+				MoveFolder(destDir, $"{contentFilePath}/common/{dir}", dir, totalfiles);
 				curInc2 += inc2;
-				Console.WriteLine($"Transferring game files [{dir}]... [{(int)curInc2}%]");
+				Console.WriteLine($"File transfer for {dir} complete... [{(int)curInc2}%]");
 			}
 			Console.WriteLine("-----------------------------");
 
@@ -162,7 +166,10 @@ namespace SteamDepotInstaller2
 
 			Console.WriteLine("-----------------------------");
 
-			Console.WriteLine("File transfer finished!");
+			TimeSpan total = DateTime.Now.Subtract(time);
+			Console.WriteLine($"File transfer finished!");
+			Console.WriteLine($"Elapsed time: {(int)total.TotalHours}h {(int)total.TotalMinutes}m {(int)total.TotalSeconds}s.");
+			Console.WriteLine("-----------------------------");
 			Console.WriteLine("Press enter to exit...");
 
 			Console.ReadLine();
