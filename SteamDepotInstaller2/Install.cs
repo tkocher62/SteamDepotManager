@@ -1,5 +1,6 @@
 ﻿using FluentFTP;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -22,7 +23,7 @@ namespace SteamDepotInstaller2
 			}
 		}
 
-		private static void TransferFiles(string name, string subfolderSrc = "", string subFolderDst = "")
+		private static void TransferFiles(string name, string subfolderSrc = "", string subFolderDst = "", bool useContentFolder = true)
 		{
 			DirectoryInfo d = new DirectoryInfo($"{gamesFilePath}{(subfolderSrc != "" ? $"/{subfolderSrc}" : "")}");
 			FileInfo[] files = d.GetFiles();
@@ -34,7 +35,7 @@ namespace SteamDepotInstaller2
 
 			foreach (var file in files)
 			{
-				string de = $"{contentFilePath}{(subFolderDst != "" ? $"/{subFolderDst}" : "")}/{file.Name}";
+				string de = $"{(useContentFolder ? contentFilePath : "")}{(subFolderDst != "" ? $"/{subFolderDst}" : "")}/{file.Name}";
 				if (!File.Exists(de))
 				{
 					UploadFile(file.FullName, de);
@@ -104,12 +105,18 @@ namespace SteamDepotInstaller2
 			}
 			gamesFilePath = folder;
 
-			DateTime time = DateTime.Now;
+			Stopwatch stopWatch = new Stopwatch();
+			stopWatch.Start();
+
 			Console.WriteLine("Initializing file transfer...");
 			Console.WriteLine("-----------------------------");
 
 			// DEPOTCACHE
 			TransferFiles("depotcache", "depotcache", "depotcache");
+			Console.WriteLine("-----------------------------");
+
+			// ACHIEVEMENTS
+			TransferFiles("achievements", "", $"Server/data/GameStats/schemas", false);
 			Console.WriteLine("-----------------------------");
 
 			// STEAMIDS
@@ -164,9 +171,9 @@ namespace SteamDepotInstaller2
 
 			Console.WriteLine("-----------------------------");
 
-			TimeSpan total = DateTime.Now.Subtract(time);
+			stopWatch.Stop();
 			Console.WriteLine($"File transfer finished!");
-			Console.WriteLine($"Elapsed time: {(int)total.TotalHours}h {(int)total.TotalMinutes}m {(int)total.TotalSeconds}s.");
+			Console.WriteLine($"Elapsed time: {String.Format("{0}h {1}m {2}s", stopWatch.Elapsed.Hours, stopWatch.Elapsed.Minutes, stopWatch.Elapsed.Seconds)}");
 			Console.WriteLine("-----------------------------");
 			Console.WriteLine("Press enter to exit...");
 

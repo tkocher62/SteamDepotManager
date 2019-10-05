@@ -173,6 +173,12 @@ namespace SteamDepotInstaller2
 			Console.WriteLine("Copying data files...");
 			File.Copy($"{sPath}/steamapps/{acf}", $"{dPath}/{gInfo.gDirTitle}/steamapps/{acf}");
 
+			// Copy achievements
+			Console.WriteLine("Copying achievements...");
+			string file = $"UserGameStatsSchema_{gInfo.gID}.bin";
+			string getFile = $"{sPath}/appcache/stats/{file}";
+			if (File.Exists(getFile)) File.Copy(getFile, $"{dPath}/{gInfo.gDirTitle}/{file}");
+
 			// Copy mounted manifests
 			int index = lines.FindIndex(x => x.Contains("MountedDepots")) + 2;
 			for (int i = index; i < lines.Count; i++)
