@@ -2,14 +2,9 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace SteamDepotInstaller2
 {
 	class GameInfo
@@ -27,13 +22,6 @@ namespace SteamDepotInstaller2
 			@"HKEY_LOCAL_MACHINE\SOFTWARE\Valve\Steam", "InstallPath", null);
 		private static int lastCount = 0;
 		private static float fCount = 0;
-
-		[DllImport("kernel32.dll", SetLastError = true, CallingConvention = CallingConvention.Winapi)]
-		[return: MarshalAs(UnmanagedType.Bool)]
-		private static extern bool IsWow64Process(
-			[In] IntPtr hProcess,
-			[Out] out bool wow64Process
-		);
 
 		private static bool InitCopy(string sourceFolder, string destFolder)
 		{

@@ -10,7 +10,7 @@ namespace SteamDepotInstaller2
 	{
 		private static string gamesFilePath;
 		private const string contentFilePath = "Server/data/Content/3";
-		private static FtpClient ftp = new FtpClient("108.36.249.161");
+		public static FtpClient ftp = new FtpClient("108.36.249.161");
 		private static int lastCount = 0;
 		private static float fCount = 0;
 
@@ -104,8 +104,6 @@ namespace SteamDepotInstaller2
 			}
 			gamesFilePath = folder;
 
-			ftp.Credentials = new NetworkCredential("todd", "gmodsniper");
-
 			DateTime time = DateTime.Now;
 			Console.WriteLine("Initializing file transfer...");
 			Console.WriteLine("-----------------------------");
@@ -172,6 +170,13 @@ namespace SteamDepotInstaller2
 			Console.WriteLine("-----------------------------");
 			Console.WriteLine("Press enter to exit...");
 
+			Console.ReadLine();
+		}
+
+		public static void InstallIni(string filepath)
+		{
+			UploadFile(filepath, "Server/TINserver.ini");
+			Console.WriteLine("Finished transfer of ini file. Press enter to exit.");
 			Console.ReadLine();
 		}
 	}

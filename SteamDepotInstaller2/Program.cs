@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Net;
 
 namespace SteamDepotInstaller2
 {
@@ -12,9 +6,18 @@ namespace SteamDepotInstaller2
 	{
 		static void Main(string[] args)
 		{
+			Install.ftp.Credentials = new NetworkCredential("todd", "gmodsniper");
+
 			if (args.Length > 0)
 			{
-				Install.InstallGame(args[0]);
+				if (args[0].Contains("TINserver.ini"))
+				{
+					Install.InstallIni(args[0]);
+				}
+				else
+				{
+					Install.InstallGame(args[0]);
+				}
 			}
 			else
 			{
