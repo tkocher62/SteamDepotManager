@@ -1,10 +1,5 @@
 ﻿using FluentFTP;
-using Microsoft.Win32;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Net;
-using System.Text.RegularExpressions;
 
 namespace SteamDepotInstaller2
 {

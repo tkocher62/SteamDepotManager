@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SteamDepotInstaller2
 {
@@ -15,7 +11,7 @@ namespace SteamDepotInstaller2
 			{
 				return Directory.GetFiles(sourceFolder, "*", SearchOption.AllDirectories).Length;
 			}
-			catch (Exception x)
+			catch
 			{
 				return -1;
 			}
