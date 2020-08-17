@@ -15,7 +15,7 @@ namespace SteamDepotInstaller2
 			{
 				return Directory.GetFiles(sourceFolder, "*", SearchOption.AllDirectories).Length;
 			}
-			catch
+			catch (Exception x)
 			{
 				return -1;
 			}

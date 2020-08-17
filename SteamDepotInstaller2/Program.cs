@@ -1,4 +1,10 @@
-﻿using System.Net;
+﻿using FluentFTP;
+using Microsoft.Win32;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net;
+using System.Text.RegularExpressions;
 
 namespace SteamDepotInstaller2
 {
@@ -6,7 +12,10 @@ namespace SteamDepotInstaller2
 	{
 		static void Main(string[] args)
 		{
-			Install.ftp.Credentials = new NetworkCredential("todd", "gmodsniper");
+			Install.ftp.DataConnectionType = FtpDataConnectionType.EPSV;
+			Install.ftp.Credentials = new NetworkCredential("ian", "test");
+
+			Get.GetSteamDir(730);
 
 			if (args.Length > 0)
 			{

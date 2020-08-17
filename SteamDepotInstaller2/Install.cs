@@ -11,7 +11,7 @@ namespace SteamDepotInstaller2
 	{
 		private static string gamesFilePath;
 		private const string contentFilePath = "Server/data/Content/3";
-		public static FtpClient ftp = new FtpClient("108.36.249.161");
+		public static FtpClient ftp = new FtpClient("steam.gameslab.ca");
 		private static int lastCount = 0;
 		private static float fCount = 0;
 
@@ -62,38 +62,48 @@ namespace SteamDepotInstaller2
 
 		private static void MoveFolder(string sourceFolder, string destFolder, string dirName, int totalCount)
 		{
-			if (ftp.DirectoryExists(destFolder)) ftp.DeleteDirectory(destFolder);
-			ftp.CreateDirectory(destFolder);
-			DirectoryInfo d = new DirectoryInfo(sourceFolder);
-			FileInfo[] files = d.GetFiles();
-			foreach (FileInfo file in files)
+			try
 			{
-				string name = Path.GetFileName(file.FullName);
-				string dest = Path.Combine(destFolder, name);
-				if (!File.Exists(dest))
+				if (ftp.DirectoryExists(destFolder)) ftp.DeleteDirectory(destFolder);
+				ftp.CreateDirectory(destFolder);
+				DirectoryInfo d = new DirectoryInfo(sourceFolder);
+				FileInfo[] files = d.GetFiles();
+				foreach (FileInfo file in files)
 				{
-					UploadFile(file.FullName, dest);
-					File.Delete(file.FullName);
-				}
-				else File.Delete(file.FullName);
+					string name = Path.GetFileName(file.FullName);
+					string dest = Path.Combine(destFolder, name);
+					if (!File.Exists(dest))
+					{
+						UploadFile(file.FullName, dest);
+						File.Delete(file.FullName);
+					}
+					else File.Delete(file.FullName);
 
-				fCount++;
-				int progress = (int)(fCount / totalCount * 100);
-				if (lastCount != progress && progress > lastCount)
-				{
-					Console.WriteLine($"-> Transferring sub files ({dirName})... [{progress}%] [{fCount}/{totalCount}]");
+					fCount++;
+					int progress = (int)(fCount / totalCount * 100);
+					if (lastCount != progress && progress > lastCount)
+					{
+						Console.WriteLine($"-> Transferring sub files ({dirName})... [{progress}%] [{fCount}/{totalCount}]");
+					}
+					lastCount = progress;
 				}
-				lastCount = progress;
+				string[] folders = Directory.GetDirectories(sourceFolder);
+				foreach (string folder in folders)
+				{
+					string name = Path.GetFileName(folder);
+					string dest = Path.Combine(destFolder, name);
+					MoveFolder(folder, dest, dirName, totalCount);
+				}
+
+				if (Directory.Exists(sourceFolder)) Directory.Delete(sourceFolder);
 			}
-			string[] folders = Directory.GetDirectories(sourceFolder);
-			foreach (string folder in folders)
+			catch (Exception x)
 			{
-				string name = Path.GetFileName(folder);
-				string dest = Path.Combine(destFolder, name);
-				MoveFolder(folder, dest, dirName, totalCount);
+				Console.WriteLine($"[FTP ERROR] {x.Message}");
+				Console.WriteLine("Press enter to attempt to continue transfer...");
+				MoveFolder(sourceFolder, destFolder, dirName, totalCount);
+				Console.ReadLine();
 			}
-
-			if (Directory.Exists(sourceFolder)) Directory.Delete(sourceFolder);
 		}
 
 		public static void InstallGame(string folder)
@@ -132,10 +142,13 @@ namespace SteamDepotInstaller2
 			{
 				string[] acfLines = File.ReadAllLines(file.FullName);
 				int indx = GetIndexArray(acfLines, "LastOwner");
-				acfLines[indx] = acfLines[indx].Replace(acfLines[indx].Split('"')[3], "0");
-				File.WriteAllLines(file.FullName, acfLines);
-				curInc1 += inc;
-				Console.WriteLine($"Clearing SteamIDs ({file.Name})... [{(int)curInc1}%]");
+				if (indx != -1)
+				{
+					acfLines[indx] = acfLines[indx].Replace(acfLines[indx].Split('"')[3], "0");
+					File.WriteAllLines(file.FullName, acfLines);
+					curInc1 += inc;
+					Console.WriteLine($"-> Clearing SteamIDs ({file.Name})... [{(int)curInc1}%]");
+				}
 			}
 			Console.WriteLine("Finished clearing SteamIDs!");
 			Console.WriteLine("-----------------------------");

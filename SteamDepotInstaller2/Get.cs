@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text.RegularExpressions;
+
 namespace SteamDepotInstaller2
 {
 	class GameInfo
@@ -33,6 +35,102 @@ namespace SteamDepotInstaller2
 				return true;
 			}
 			return false;
+		}
+
+		public static string GetAcfPath(int appid)
+		{
+			string SteamInstall = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64)?.OpenSubKey("SOFTWARE")?.OpenSubKey("WOW6432Node")?.OpenSubKey("Valve")?.OpenSubKey("Steam")?.GetValue("InstallPath").ToString();
+			if (string.IsNullOrEmpty(SteamInstall))
+			{
+				SteamInstall = Registry.LocalMachine.OpenSubKey("SOFTWARE")?.OpenSubKey("WOW6432Node")?.OpenSubKey("Valve")?.OpenSubKey("Steam")?.GetValue("InstallPath").ToString();
+			}
+
+			if (string.IsNullOrEmpty(SteamInstall)) return null;
+
+			string vdf = Path.Combine(SteamInstall, @"steamapps\libraryfolders.vdf");
+			if (!File.Exists(@vdf)) return null;
+
+			Regex regex = new Regex("\\s\"\\d\"\\s+\"(.+)\"");
+			List<string> SteamPaths = new List<string>
+			{
+				Path.Combine(SteamInstall, @"steamapps")
+			};
+
+			using (StreamReader reader = new StreamReader(@vdf))
+			{
+				string line;
+				while ((line = reader.ReadLine()) != null)
+				{
+					Match match = regex.Match(line);
+					if (match.Success)
+					{
+						SteamPaths.Add(Path.Combine(match.Groups[1].Value.Replace(@"\\", @"\"), @"steamapps"));
+					}
+				}
+			}
+			foreach (string path in SteamPaths)
+			{
+				string acf = Path.Combine(@path, @"appmanifest_" + appid + ".acf");
+				if (File.Exists(acf))
+				{
+					return acf;
+				}
+			}
+			return null;
+		}
+
+		public static string GetSteamDir(int appid)
+		{
+			string SteamInstall = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64)?.OpenSubKey("SOFTWARE")?.OpenSubKey("WOW6432Node")?.OpenSubKey("Valve")?.OpenSubKey("Steam")?.GetValue("InstallPath").ToString();
+			if (string.IsNullOrEmpty(SteamInstall))
+			{
+				SteamInstall = Registry.LocalMachine.OpenSubKey("SOFTWARE")?.OpenSubKey("WOW6432Node")?.OpenSubKey("Valve")?.OpenSubKey("Steam")?.GetValue("InstallPath").ToString();
+			}
+
+			if (string.IsNullOrEmpty(SteamInstall)) return null;
+
+			string vdf = Path.Combine(SteamInstall, @"steamapps\libraryfolders.vdf");
+			if (!File.Exists(@vdf)) return null;
+
+			Regex regex = new Regex("\\s\"\\d\"\\s+\"(.+)\"");
+			List<string> SteamPaths = new List<string>
+			{
+				Path.Combine(SteamInstall, @"steamapps")
+			};
+
+			using (StreamReader reader = new StreamReader(@vdf))
+			{
+				string line;
+				while ((line = reader.ReadLine()) != null)
+				{
+					Match match = regex.Match(line);
+					if (match.Success)
+					{
+						SteamPaths.Add(Path.Combine(match.Groups[1].Value.Replace(@"\\", @"\"), @"steamapps"));
+					}
+				}
+			}
+			regex = new Regex("\\s\"installdir\"\\s+\"(.+)\"");
+			foreach (string path in SteamPaths)
+			{
+				string acf = Path.Combine(@path, @"appmanifest_" + appid + ".acf");
+				if (File.Exists(acf))
+				{
+					using (StreamReader reader = new StreamReader(acf))
+					{
+						string line;
+						while ((line = reader.ReadLine()) != null)
+						{
+							Match match = regex.Match(line);
+							if (match.Success)
+							{
+								return Path.Combine(@path, @"common", match.Groups[1].Value);
+							}
+						}
+					}
+				}
+			}
+			return null;
 		}
 
 		private static void CopyFolder(string sourceFolder, string destFolder, int totalCount)
@@ -123,7 +221,7 @@ namespace SteamDepotInstaller2
 				gInfo.gID = a;
 				try
 				{
-					gInfo.gTitle = File.ReadAllLines($"{sPath}/steamapps/appmanifest_{gInfo.gID}.acf").ToList()[4].Replace("\"name\"", "").Split('"')[1];
+					gInfo.gTitle = File.ReadAllLines(GetAcfPath(a)).ToList()[4].Replace("\"name\"", "").Split('"')[1];
 				}
 				catch
 				{
@@ -138,9 +236,9 @@ namespace SteamDepotInstaller2
 				Console.WriteLine("Unexpected parsing error.");
 			}
 
-			string acf = $"appmanifest_{gInfo.gID}.acf";
-
-			List<string> lines = File.ReadAllLines($"{sPath}/steamapps/{acf}").ToList();
+			string acf = GetAcfPath(gInfo.gID);
+			string acfName = acf.Split(Path.DirectorySeparatorChar).Last();
+			List<string> lines = File.ReadAllLines(acf).ToList();
 			gInfo.gDirTitle = lines[6].Replace("\"installdir\"", "").Split('"')[1];
 			if (Directory.Exists($"{dPath}/{gInfo.gDirTitle}"))
 			{
@@ -154,15 +252,15 @@ namespace SteamDepotInstaller2
 			Console.WriteLine("----------------------------------");
 			Console.WriteLine("Transferring files, please wait...");
 
-			if (!File.Exists($"{sPath}/steamapps/appmanifest_{gInfo.gID}.acf"))
+			if (!File.Exists(acf))
 			{
-				Console.WriteLine("Couldn't locate game files. Make sure it's installed on your computer.");
+				Console.WriteLine("Couldn't locate game files. Make sure the game is installed on your computer.");
 				Console.WriteLine("Press enter to continue...");
 				Console.ReadLine();
 				GetGameFiles();
 			}
 
-			Console.WriteLine("Creating directory...");
+			Console.WriteLine("-> Creating directory...");
 
 			Directory.CreateDirectory($"{dPath}/{gInfo.gDirTitle}");
 			Directory.CreateDirectory($"{dPath}/{gInfo.gDirTitle}/steamapps");
@@ -170,11 +268,11 @@ namespace SteamDepotInstaller2
 			Directory.CreateDirectory($"{dPath}/{gInfo.gDirTitle}/depotcache");
 
 			// Copy acf
-			Console.WriteLine("Copying data files...");
-			File.Copy($"{sPath}/steamapps/{acf}", $"{dPath}/{gInfo.gDirTitle}/steamapps/{acf}");
+			Console.WriteLine("-> Copying data files...");
+			File.Copy(acf, $"{dPath}/{gInfo.gDirTitle}/steamapps/{acfName}");
 
 			// Copy achievements
-			Console.WriteLine("Copying achievements...");
+			Console.WriteLine("-> Copying achievements...");
 			string file = $"UserGameStatsSchema_{gInfo.gID}.bin";
 			string getFile = $"{sPath}/appcache/stats/{file}";
 			if (File.Exists(getFile)) File.Copy(getFile, $"{dPath}/{gInfo.gDirTitle}/{file}");
@@ -225,8 +323,8 @@ namespace SteamDepotInstaller2
 			}
 
 			// Copy game files
-			Console.WriteLine("Copying game files...");
-			bool success = InitCopy($"{sPath}/steamapps/common/{gInfo.gDirTitle}", $"{dPath}/{gInfo.gDirTitle}/steamapps/common/{gInfo.gDirTitle}");
+			Console.WriteLine("-> Copying game files...");
+			bool success = InitCopy(GetSteamDir(gInfo.gID), $"{dPath}/{gInfo.gDirTitle}/steamapps/common/{gInfo.gDirTitle}");
 			Console.WriteLine("----------------------------------");
 			if (!success)
 			{
