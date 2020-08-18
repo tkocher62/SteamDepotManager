@@ -7,7 +7,7 @@ namespace SteamDepotInstaller2
 	{
 		static void Main(string[] args)
 		{
-			Install.ftp.DataConnectionType = FtpDataConnectionType.EPSV;
+			Install.ftp.DataConnectionType = FtpDataConnectionType.PASV;
 			Install.ftp.Credentials = new NetworkCredential("ian", "test");
 
 			Get.GetSteamDir(730);
